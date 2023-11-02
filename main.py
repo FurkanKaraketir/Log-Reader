@@ -17,6 +17,25 @@ latitudes = []
 longitudes = []
 altitudes = []
 
+#dir_path = r'C:/Users/furka/Downloads/Log Reader/Photos'
+dir_path =r'D:/Ankara Rte Proje İHL'
+# list to store files
+res = []
+for file_path in os.listdir(dir_path):
+    # check if current file_path is a file
+    if os.path.isfile(os.path.join(dir_path, file_path)):
+        # add filename to list
+        res.append(file_path)
+
+descriptions = []
+
+# Iterate directory
+for a in res:
+    
+    description = '<img style="max-width:500px;" src="file:///D:/Ankara Rte Proje İHL/{}">'.format(a)
+    descriptions.append(description)
+
+    
 
 def extract_lat_long_alt(line):
     # Split the line into tokens
@@ -79,20 +98,31 @@ kml_file_path = 'C:/Users/furka/Downloads/Log Reader/map_for_earth.kml'
 
 # Create a KML object
 kml = simplekml.Kml()
+
+
 folder = kml.newfolder(name='Markers')
 
+i = 1
 # Add Placemarks for each marker
-for lat, lon, alt in zip(latitudes, longitudes, altitudes):
+for lat, lon, alt, desc in zip(latitudes, longitudes, altitudes, descriptions):
     placemark = folder.newpoint()
     placemark.coords = [(lon, lat, alt)]  # Include altitude data
-    placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/paddle/red-circle.png'
 
     # Set altitude mode to clampToGround for 3D effect
     placemark.altitudemode = simplekml.AltitudeMode.relativetoground
     placemark.altitude = alt  # Adjust the altitude value as needed
+    placemark.description = desc
+    safe1 = desc.replace('<img style="max-width:500px;" src="file:///', "")
+    safe2 = safe1.replace('">', "")
+    if i % 7 == 0:
+        placemark.style.iconstyle.icon.href = safe2
+    else:
+        placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/paddle/red-stars.png'
+    i+=1
+
 # Save the KMZ file
 kml.savekmz(kmz_file_path)
-
+kml.save(kml_file_path)
 #draw graph for altitude
 plt.plot(altitudes)
 plt.ylabel('Altitude')
@@ -100,7 +130,7 @@ plt.xlabel('Time')
 plt.title('Altitude Graph')
 
 # Automatically open the HTML file in the default web browser
-webbrowser.open('file://' + os.path.realpath(html_file_path))
+#webbrowser.open('file://' + os.path.realpath(html_file_path))
 
 os.startfile(kmz_file_path)
 
