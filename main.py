@@ -101,23 +101,28 @@ kml = simplekml.Kml()
 
 
 folder = kml.newfolder(name='Markers')
-
+pos = 0
 i = 1
 # Add Placemarks for each marker
-for lat, lon, alt, desc in zip(latitudes, longitudes, altitudes, descriptions):
-    placemark = folder.newpoint()
-    placemark.coords = [(lon, lat, alt)]  # Include altitude data
+for lat, lon, alt in zip(latitudes, longitudes, altitudes):
+  
+    if i % 2 == 0:
+        placemark = folder.newpoint()
+        placemark.coords = [(lon, lat, alt)]  # Include altitude data
 
-    # Set altitude mode to clampToGround for 3D effect
-    placemark.altitudemode = simplekml.AltitudeMode.relativetoground
-    placemark.altitude = alt  # Adjust the altitude value as needed
-    placemark.description = desc
-    safe1 = desc.replace('<img style="max-width:500px;" src="file:///', "")
-    safe2 = safe1.replace('">', "")
-    if i % 7 == 0:
-        placemark.style.iconstyle.icon.href = safe2
-    else:
-        placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/paddle/red-stars.png'
+        # Set altitude mode to clampToGround for 3D effect
+        placemark.altitudemode = simplekml.AltitudeMode.relativetoground
+        placemark.altitude = alt  # Adjust the altitude value as needed
+        placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/heliport.png'
+
+        
+        if i % 19 == 0:
+            placemark.description = descriptions[pos]
+            safe1 = descriptions[pos].replace('<img style="max-width:500px;" src="file:///', "")
+            safe2 = safe1.replace('">', "")
+            placemark.style.iconstyle.icon.href = safe2
+            if pos < len(descriptions)-1:
+                pos += 1
     i+=1
 
 # Save the KMZ file
