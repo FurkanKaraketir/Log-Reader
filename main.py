@@ -106,7 +106,7 @@ i = 1
 # Add Placemarks for each marker
 for lat, lon, alt in zip(latitudes, longitudes, altitudes):
   
-    if i % 2 == 0:
+    if i % 6 == 0:
         placemark = folder.newpoint()
         placemark.coords = [(lon, lat, alt)]  # Include altitude data
 
