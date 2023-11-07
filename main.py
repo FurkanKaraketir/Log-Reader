@@ -8,32 +8,53 @@ import time
 import matplotlib.pyplot as plt
 import tkinter as tk
 from tkinter import filedialog
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 
 root = tk.Tk()
 root.withdraw() 
 # Define lists to store Lat, Long, and Alt values
-timestamp = []
+timestamps = []
 latitudes = []
 longitudes = []
 altitudes = []
 
-#dir_path = r'C:/Users/furka/Downloads/Log Reader/Photos'
-dir_path =r'D:/Ankara Rte Proje İHL'
+def get_image_timestamp(image_path):
+    try:
+        # Open the image using Pillow
+        img = Image.open(image_path)
+        
+        # Get the EXIF data
+        exif_data = img._getexif()
+        
+        # Check if there is EXIF data
+        if exif_data is not None:
+            for tag, value in exif_data.items():
+                tag_name = TAGS.get(tag, tag)
+                
+                # Check if the tag corresponds to the timestamp
+                if "DateTime" in tag_name:
+                    return value
+    except (AttributeError, KeyError):
+        pass
+    
+    return "Timestamp not found"
+
+dir_path =r'D:/resimler'
 # list to store files
-res = []
+timestampWithfilename = {}
 for file_path in os.listdir(dir_path):
     # check if current file_path is a file
     if os.path.isfile(os.path.join(dir_path, file_path)):
         # add filename to list
-        res.append(file_path)
+        timestampWithfilename[get_image_timestamp(os.path.join(dir_path, file_path))] = file_path
 
-descriptions = []
+descriptionsWithFileName = {}
 
 # Iterate directory
-for a in res:
-    
-    description = '<img style="max-width:500px;" src="file:///D:/Ankara Rte Proje İHL/{}">'.format(a)
-    descriptions.append(description)
+for a in timestampWithfilename.values():
+    description = '<img style="max-width:500px;" src="file:///{}/{}">'.format(dir_path,a)
+    descriptionsWithFileName[a] = description
 
     
 
@@ -44,7 +65,7 @@ def extract_lat_long_alt(line):
     # Check if the line starts with "GPS" and has enough tokens
     if len(tokens) >= 10 and tokens[0] == "GPS":
         # Extract the Lat, Long, and Alt values
-        Time = float(tokens[1])
+        Time = int(float(tokens[1]))
         Lat = float(tokens[8])
         Long = float(tokens[9])
         Alt = float(tokens[10])
@@ -70,11 +91,10 @@ for line in lines:
         latitudes.append(Lat)
         longitudes.append(Long)
         altitudes.append(Alt)
-        timestamp.append(Time)
+        timestamps.append(Time)
 
 latitude1 = latitudes[0]
 longitude1 = longitudes[0]
-
 
 gmap = gmplot.GoogleMapPlotter(latitude1, longitude1, 18)
 
@@ -101,29 +121,27 @@ kml = simplekml.Kml()
 
 
 folder = kml.newfolder(name='Markers')
-pos = 0
-i = 1
+i = 0
+
+
 # Add Placemarks for each marker
-for lat, lon, alt in zip(latitudes, longitudes, altitudes):
+for lat, lon, alt,stamp in zip(latitudes, longitudes, altitudes,timestamps):
   
-    if i % 6 == 0:
         placemark = folder.newpoint()
         placemark.coords = [(lon, lat, alt)]  # Include altitude data
 
         # Set altitude mode to clampToGround for 3D effect
         placemark.altitudemode = simplekml.AltitudeMode.relativetoground
         placemark.altitude = alt  # Adjust the altitude value as needed
-        placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/heliport.png'
+        logTime = str(time.localtime(stamp).tm_year)+":"+str(time.localtime(stamp).tm_mon)+":"+str(time.localtime(stamp).tm_mday)+" "+str(time.localtime(stamp).tm_hour)+":"+str(time.localtime(stamp).tm_min)+":"+str(time.localtime(stamp).tm_sec)
+        if logTime in timestampWithfilename.keys():
+            placemark.description = descriptionsWithFileName[timestampWithfilename[logTime]]
+            placemark.style.iconstyle.icon.href = str(dir_path)+"/"+timestampWithfilename[logTime]
+        else:
+            placemark.description = logTime
+            placemark.style.iconstyle.icon.href = 'http://maps.google.com/mapfiles/kml/shapes/heliport.png'
 
-        
-        if i % 19 == 0:
-            placemark.description = descriptions[pos]
-            safe1 = descriptions[pos].replace('<img style="max-width:500px;" src="file:///', "")
-            safe2 = safe1.replace('">', "")
-            placemark.style.iconstyle.icon.href = safe2
-            if pos < len(descriptions)-1:
-                pos += 1
-    i+=1
+            
 
 # Save the KMZ file
 kml.savekmz(kmz_file_path)
