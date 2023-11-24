@@ -10,6 +10,10 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 root = tk.Tk()
 root.withdraw() 
@@ -65,7 +69,7 @@ def extract_lat_long_alt(line):
     # Check if the line starts with "GPS" and has enough tokens
     if len(tokens) >= 10 and tokens[0] == "GPS":
         # Extract the Lat, Long, and Alt values
-        Time = int(float(tokens[1]))
+        Time = int(float(tokens[1]))/1000000
         Lat = float(tokens[8])
         Long = float(tokens[9])
         Alt = float(tokens[10])
@@ -103,7 +107,7 @@ gmap = gmplot.GoogleMapPlotter(latitude1, longitude1, 18)
 gmap.map_type = 'satellite'
 
 # set api key
-gmap.apikey = "AIzaSyCK9CucXXjSuf2dmN3RY-XCLdFdb735zco"
+gmap.apikey = os.environ.get("GOOGLE_MAPS_API_KEY")
 
 # Add markers for specific GPS points
 for lat, lon in zip(latitudes, longitudes):
