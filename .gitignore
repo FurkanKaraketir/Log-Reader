@@ -3,3 +3,4 @@
 *.kml
 *.html
 Log Files/
+.env
